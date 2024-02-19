@@ -48,7 +48,7 @@ def mask_random_words(dataset):
  
 
 dataset = load_dataset("imdb")
-chunks = group_texts(dataset['unsupervised'])
+chunks = group_texts(dataset['unsupervised'][:10])
 
 
 masked_data = mask_random_words(chunks)

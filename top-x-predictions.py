@@ -1,32 +1,58 @@
 from transformers import pipeline, AutoTokenizer, AutoModelForMaskedLM
 from sentence_transformers import SentenceTransformer, util
+from datasets import load_from_disk
+
+
+def eval(pred_word, true_word, embeding_model):
+
+    masked_embedding = embeding_model.encode(true_word, convert_to_tensor=True)
+    prediction_embedding = embeding_model.encode(pred_word['token'], convert_to_tensor= True)
+    cosine_similarity = util.pytorch_cos_sim(masked_embedding, prediction_embedding)
+
+    print(f"{pred_word['token_str']}: {pred_word['score']:.2f}")
+    print(f"Cosine Similarity: {cosine_similarity.item():.2f}")
+
+
 
 ## Load Models:
     
+
 output_dir = "model/imdb-finetuned-distilbert"
 embeding_model = SentenceTransformer('all-MiniLM-L6-v2')
 model = AutoModelForMaskedLM.from_pretrained(output_dir)
 tokenizer = AutoTokenizer.from_pretrained(output_dir)
 
 mask_pipeline = pipeline("fill-mask", model=model, tokenizer=tokenizer)
+##
+#### Load Data:
 
-## Load Data:
+dataset_loaded = load_from_disk('./datasets/imdb')
 
-masked_word = 'horror'
-masked_embedding = embeding_model.encode(masked_word, convert_to_tensor=True)
-text = "He walked into the basement with the [MASK] movie from the night before playing in his head."
+for i in range(len(dataset_loaded['text'])):
+    
 
-## Make Predictions:
+    masked_word = dataset_loaded['label'][i]
+    masked_embedding = embeding_model.encode(masked_word, convert_to_tensor=True)
+    text = dataset_loaded['text'][i]
 
-preds = mask_pipeline(text)
+    ## Make Predictions:
 
-## Calculate Similarity:
-for pred in preds:
-    prediction_embedding = embeding_model.encode(pred['token_str'], convert_to_tensor=True)
-    cosine_similarity = util.pytorch_cos_sim(masked_embedding, prediction_embedding)
+    preds = mask_pipeline(text)
+    print(f'>>>{i}----------------------------------------')
+    redaction_score = 0
+    ## Calculate Similarity:
+    for pred in preds:
+        prediction_embedding = embeding_model.encode(pred['token_str'], convert_to_tensor=True)
+        cosine_similarity = util.pytorch_cos_sim(masked_embedding, prediction_embedding)
 
-    print(f"{pred['token_str']}: {pred['score']:.2f}")
-    print(f"Cosine Similarity: {cosine_similarity.item():.2f}")
+        print(f"{pred['token_str']}: {pred['score']:.2f}")
+        print(f"Cosine Similarity: {cosine_similarity.item():.2f}")
+        
+        points = len(preds) - preds.index(pred)
+        redaction_score += (points * cosine_similarity)
+    print(redaction_score)
+
+
 
 
 
