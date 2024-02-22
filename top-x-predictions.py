@@ -1,6 +1,8 @@
 from transformers import pipeline, AutoTokenizer, AutoModelForMaskedLM
 from sentence_transformers import SentenceTransformer, util
 from datasets import load_from_disk
+import matplotlib as plt
+
 
 
 def eval(pred_word, true_word, embeding_model):
@@ -27,7 +29,14 @@ mask_pipeline = pipeline("fill-mask", model=model, tokenizer=tokenizer)
 #### Load Data:
 
 dataset_loaded = load_from_disk('./datasets/imdb')
-
+print(dataset_loaded)
+correct_guess = {
+        "1": 0, 
+        "2": 0,
+        "3": 0,
+        "4": 0,
+        "5": 0,
+    }
 for i in range(len(dataset_loaded['text'])):
     
 
@@ -41,17 +50,24 @@ for i in range(len(dataset_loaded['text'])):
     print(f'>>>{i}----------------------------------------')
     redaction_score = 0
     ## Calculate Similarity:
+    
+    i = 1
     for pred in preds:
         prediction_embedding = embeding_model.encode(pred['token_str'], convert_to_tensor=True)
         cosine_similarity = util.pytorch_cos_sim(masked_embedding, prediction_embedding)
 
         print(f"{pred['token_str']}: {pred['score']:.2f}")
         print(f"Cosine Similarity: {cosine_similarity.item():.2f}")
+
+        if(cosine_similarity.item() == 1):
+            correct_guess[str(i)] += 1
+        i = i + 1
         
         points = len(preds) - preds.index(pred)
         redaction_score += (points * cosine_similarity)
     print(redaction_score)
 
+print(correct_guess)
 
 
 
