@@ -82,7 +82,7 @@ correct_guess = {
 pos_true_counts = {}
 pos_cor_pred_counts = {}
 
-for i in range(len(dataset_loaded['text'][:50])):
+for i in range(len(dataset_loaded['text'])):
     
 
     masked_word = dataset_loaded['label'][i]
