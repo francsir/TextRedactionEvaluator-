@@ -47,7 +47,7 @@ for i in range(len(dataset_loaded['text'])):
     ## Make Predictions:
 
     preds = mask_pipeline(text)
-    print(f'>>>{i}----------------------------------------')
+    #print(f'>>>{i}----------------------------------------')
     redaction_score = 0
     ## Calculate Similarity:
     
