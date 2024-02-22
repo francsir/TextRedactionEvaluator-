@@ -1,11 +1,12 @@
 from transformers import pipeline, AutoTokenizer, AutoModelForMaskedLM
 from sentence_transformers import SentenceTransformer, util
 from datasets import load_from_disk
-import matplotlib as plt
+import matplotlib.pyplot as plt
 import nltk
 from nltk.tokenize import word_tokenize
 from nltk import pos_tag
 import json
+import numpy as np
 
 
 def save_dicts(corr_guess, true_counts, pred_counts):
@@ -23,6 +24,28 @@ def insertPos(pos, counts):
     else:
         counts[pos] = 1
     
+def plot_counts(tr_pos, prd_pos):
+    all_pos = set(list(tr_pos.keys()) + list(prd_pos.keys()))
+
+    pos_types = sorted(list(all_pos))
+    tr_counts = [tr_pos.get(pos, 0) for pos in pos_types]
+    corr_counts = [prd_pos.get(pos, 0) for pos in pos_types]
+
+    bar_width = 0.35
+    index = np.arange(len(pos_types))
+    opacity = 0.8
+
+    plt.bar(index, tr_counts, bar_width, alpha=opacity, color='b', label='True Counts')
+    plt.bar(index + bar_width, corr_counts, bar_width, alpha=opacity, color='g', label='Correct Predictions')
+
+    plt.xlabel('POS Types')
+    plt.ylabel('Counts')
+    plt.title('True POS Type Counts vs Correct POS Predictions')
+    plt.xticks(index + bar_width / 2, pos_types)
+    plt.legend()
+
+    plt.tight_layout()
+    plt.show()
 
 def eval(pred_word, true_word, embeding_model):
 
@@ -59,7 +82,7 @@ correct_guess = {
 pos_true_counts = {}
 pos_cor_pred_counts = {}
 
-for i in range(len(dataset_loaded['text'])):
+for i in range(len(dataset_loaded['text'][:50])):
     
 
     masked_word = dataset_loaded['label'][i]
@@ -99,7 +122,6 @@ print(f"correct guess distribution: {correct_guess}")
 print(f"pos true counts: {pos_true_counts}")
 print(f"pos corr pred counts: {pos_cor_pred_counts}")
 save_dicts(corr_guess=correct_guess, true_counts=pos_true_counts, pred_counts=pos_cor_pred_counts)
-
-
+plot_counts(pos_true_counts, pos_cor_pred_counts)
 
     
