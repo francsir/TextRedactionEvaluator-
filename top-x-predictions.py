@@ -51,17 +51,17 @@ for i in range(len(dataset_loaded['text'])):
     redaction_score = 0
     ## Calculate Similarity:
     
-    i = 1
+    j = 1
     for pred in preds:
         prediction_embedding = embeding_model.encode(pred['token_str'], convert_to_tensor=True)
         cosine_similarity = util.pytorch_cos_sim(masked_embedding, prediction_embedding)
 
-        print(f"{pred['token_str']}: {pred['score']:.2f}")
-        print(f"Cosine Similarity: {cosine_similarity.item():.2f}")
+        #print(f"{pred['token_str']}: {pred['score']:.2f}")
+        #print(f"Cosine Similarity: {cosine_similarity.item():.2f}")
 
         if(cosine_similarity.item() == 1):
-            correct_guess[str(i)] += 1
-        i = i + 1
+            correct_guess[str(j)] += 1
+        j = j + 1
         
         points = len(preds) - preds.index(pred)
         redaction_score += (points * cosine_similarity)
