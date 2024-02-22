@@ -2,8 +2,27 @@ from transformers import pipeline, AutoTokenizer, AutoModelForMaskedLM
 from sentence_transformers import SentenceTransformer, util
 from datasets import load_from_disk
 import matplotlib as plt
+import nltk
+from nltk.tokenize import word_tokenize
+from nltk import pos_tag
+import json
 
 
+def save_dicts(corr_guess, true_counts, pred_counts):
+    data = {
+        "correct_guest_distribution": corr_guess,
+        "pos_true_counts": true_counts,
+        "pos_corr_pred_counts":pred_counts,
+    }
+    with open("prediction_res.json", 'w') as file:
+        json.dump(data,file, indent=4)
+
+def insertPos(pos, counts):
+    if pos in counts:
+        counts[pos] += 1
+    else:
+        counts[pos] = 1
+    
 
 def eval(pred_word, true_word, embeding_model):
 
@@ -37,6 +56,9 @@ correct_guess = {
         "4": 0,
         "5": 0,
     }
+pos_true_counts = {}
+pos_cor_pred_counts = {}
+
 for i in range(len(dataset_loaded['text'])):
     
 
@@ -44,6 +66,11 @@ for i in range(len(dataset_loaded['text'])):
     masked_embedding = embeding_model.encode(masked_word, convert_to_tensor=True)
     text = dataset_loaded['text'][i]
 
+
+    ## POS Classify
+    pos_tags = pos_tag([dataset_loaded['label'][i]])
+    _, pos = pos_tags[0]
+    insertPos(pos, pos_true_counts)
     ## Make Predictions:
 
     preds = mask_pipeline(text)
@@ -61,14 +88,17 @@ for i in range(len(dataset_loaded['text'])):
 
         if(cosine_similarity.item() == 1):
             correct_guess[str(j)] += 1
+            insertPos(pos, pos_cor_pred_counts)
         j = j + 1
         
         points = len(preds) - preds.index(pred)
         redaction_score += (points * cosine_similarity)
     print(redaction_score)
 
-print(correct_guess)
-
+print(f"correct guess distribution: {correct_guess}")
+print(f"pos true counts: {pos_true_counts}")
+print(f"pos corr pred counts: {pos_cor_pred_counts}")
+save_dicts(corr_guess=correct_guess, true_counts=pos_true_counts, pred_counts=pos_cor_pred_counts)
 
 
 
