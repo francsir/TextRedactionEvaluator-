@@ -6,24 +6,48 @@ import random
 import string
 
 
-
-
-
 def group_texts(dataset):
     chunk_size = 64
 
     concatenated_text = ''.join(dataset['text'])
 
-    total_length = len(concatenated_text)
-    total_length = (total_length // chunk_size) * chunk_size
-    
+    chunks_text = []
+    current_chunk = ""
+
+    for word in concatenated_text.split():
+        if len(current_chunk) + len(word) <= chunk_size:
+            current_chunk += word + " "
+        else:
+            chunks_text.append(current_chunk.strip())
+            current_chunk = word + " "
+
+    if current_chunk:
+        chunks_text.append(current_chunk.strip())
+
     chunks = {
-        'text': [concatenated_text[i : i + chunk_size] for i in range(0, total_length, chunk_size)]
+        'text': chunks_text
     }
     chunks['label'] = chunks['text'].copy()
     chunks_ds = Dataset.from_dict(chunks)
-    
+
     return chunks_ds
+
+
+##def group_texts(dataset):
+##    chunk_size = 64
+##
+##    concatenated_text = ''.join(dataset['text'])
+##
+##    total_length = len(concatenated_text)
+##    total_length = (total_length // chunk_size) * chunk_size
+##    
+##    chunks = {
+##        'text': [concatenated_text[i : i + chunk_size] for i in range(0, total_length, chunk_size)]
+##    }
+##    chunks['label'] = chunks['text'].copy()
+##    chunks_ds = Dataset.from_dict(chunks)
+##    
+##    return chunks_ds
 
 def remove_punc(word):
     translation_table = str.maketrans("", "", string.punctuation)
@@ -66,9 +90,9 @@ def mask_random_words(dataset):
  
 
 dataset = load_dataset("imdb")
-chunks = group_texts(dataset['unsupervised'])
+chunks = group_texts(dataset['unsupervised'][:10])
 masked_data = mask_random_words(chunks)
-
+#print(masked_data['text'][1])
 masked_data.save_to_disk('./datasets/imdb')
 
 
