@@ -126,7 +126,7 @@ scores = []
 for i in range(len(dataset['text'])):
     
     ## Get the true value of the masked word
-    masked_word = dataset['label'][i]
+    masked_word = dataset['label'][i].lower()
     if masked_word not in evaluator.word2vec:
         print(f'{masked_word}: Masked Word not in word2vec, skipping')
         continue
@@ -153,7 +153,7 @@ for i in range(len(dataset['text'])):
     temp_scores = []
     for pred in preds:
         if pred['token_str'] not in evaluator.word2vec:
-            print(f'{pred['token_str']}: word not in word2vec vocab')
+            print(f'{pred["token_str"]}: word not in word2vec vocab')
             continue
 
         temp_preds.append(pred['token_str'])
