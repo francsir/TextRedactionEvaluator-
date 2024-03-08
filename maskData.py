@@ -90,7 +90,7 @@ def mask_random_words(dataset):
  
 
 dataset = load_dataset("imdb")
-chunks = group_texts(dataset['unsupervised'][:10])
+chunks = group_texts(dataset['unsupervised'])
 masked_data = mask_random_words(chunks)
 #print(masked_data['text'][1])
 masked_data.save_to_disk('./datasets/imdb')

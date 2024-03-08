@@ -95,7 +95,9 @@ class RedactionEvaluator:
         plt.legend()
 
         plt.tight_layout()
-        plt.show()
+
+        plt.savefig('pos_counts.png')
+        #plt.show()
 
 def save_csv():
     csv_file_path = "predictions.csv"
@@ -109,22 +111,17 @@ def save_csv():
             writer.writerow([sentence,', '.join(true_word), ', '.join(pred_word),', '.join(map(str, score))])
 
 
-
 output_dir = "model/imdb-finetuned-distilbert"
 maskedLM = AutoModelForMaskedLM.from_pretrained(output_dir)
 tokenizer = AutoTokenizer.from_pretrained(output_dir) 
 evaluator = RedactionEvaluator(maskedLM, tokenizer, True)
-
 dataset = load_from_disk('./datasets/imdb')
 evaluator.init_dicts(5)
-
 sentences = []
 pred_words = []
 true_words = []
 scores = []
-    
 for i in range(len(dataset['text'])):
-    
     ## Get the true value of the masked word
     masked_word = dataset['label'][i].lower()
     if masked_word not in evaluator.word2vec:
@@ -133,40 +130,29 @@ for i in range(len(dataset['text'])):
     
     masked_embeding = evaluator.word2vec[masked_word]
     true_words.append(masked_word)
-    
     ## Get the words Part of speech label
     pos = evaluator.get_pos_tag([masked_word])
     evaluator.insert_pos(pos, evaluator.pos_true_counts)
-    
     ## load the masked sentence and get predictions for the mask
     text = dataset['text'][i]
     sentences.append(text)
-
     preds = evaluator.make_preds(text)
-    
     j = 1
-
     if preds is None:
         break
-
     temp_preds = []
     temp_scores = []
     for pred in preds:
         if pred['token_str'] not in evaluator.word2vec:
             print(f'{pred["token_str"]}: word not in word2vec vocab')
             continue
-
         temp_preds.append(pred['token_str'])
-
         pred_embeding = evaluator.word2vec[pred['token_str']]
         mean_squared_distance = np.mean((masked_embeding - pred_embeding) ** 2)
-
         if(mean_squared_distance == 0):
             evaluator.correct_guess[str(j)] += 1
             evaluator.insert_pos(pos, evaluator.pos_pred_counts)
-            
         j = j + 1
-        
         masked_pos = evaluator.get_pos_tag([pred['token_str']])
         #if(masked_pos == pos):
         #    
@@ -175,10 +161,9 @@ for i in range(len(dataset['text'])):
     pred_words.append(temp_preds)
     scores.append(temp_scores)
 
+
+
 save_csv()
-#print(evaluator.pos_distances)
+evaluator.plot_pos_counts()
 evaluator.save_dicts()
-print(evaluator.pos_distances)
         
-        
-    
