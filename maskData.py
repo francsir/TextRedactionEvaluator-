@@ -3,6 +3,7 @@ from transformers import DataCollatorForLanguageModeling
 import collections
 import numpy as np
 import random
+import string
 
 
 
@@ -24,21 +25,38 @@ def group_texts(dataset):
     
     return chunks_ds
 
+def remove_punc(word):
+    translation_table = str.maketrans("", "", string.punctuation)
+    return word.translate(translation_table)
+
 def mask_random_words(dataset):
     texts = []
     label = []
     for i in range(len(dataset['text'])):
+
         tokens = chunks['text'][i].split()
+        
 
-        if tokens: 
-            idx_to_mask = random.randint(0, len(tokens)-1)
-            masked_word = tokens[idx_to_mask]
-
+        if tokens:
+            bad_word = True
+            i = 0
+            while(bad_word): 
+                idx_to_mask = random.randint(0, len(tokens)-1)
             
+                masked_word = tokens[idx_to_mask]
+
+                no_punc = remove_punc(masked_word)
+
+                if no_punc != '':
+                    bad_word = False
+                    i += 1
+                if i > len(tokens):
+                    continue
+                
 
             tokens[idx_to_mask] = '[MASK]'
             texts.append(" ".join(tokens))
-            label.append(masked_word)
+            label.append(no_punc)
     
     masked = Dataset.from_dict({'text': texts, 'label': label})
 
@@ -48,9 +66,7 @@ def mask_random_words(dataset):
  
 
 dataset = load_dataset("imdb")
-chunks = group_texts(dataset['unsupervised'][:10])
-
-
+chunks = group_texts(dataset['unsupervised'])
 masked_data = mask_random_words(chunks)
 
 masked_data.save_to_disk('./datasets/imdb')
