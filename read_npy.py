@@ -15,6 +15,11 @@ for file_path in paths:
 
     for i, (pos_tag, values) in enumerate(loaded_data.items()):
         ax = axes[i]
+
+        if np.all(np.isnan(values)):
+            continue
+        
+
         ax.hist(values, bins=20, density=False, alpha=0.7, label=pos_tag)
         ax.set_title(pos_tag)
         ax.legend()
@@ -30,6 +35,10 @@ for file_path in paths:
 
     for i, (pos_tag, values) in enumerate(loaded_data.items()):
         ax = axes[i]
+
+        if np.all(np.isnan(values)):
+            continue
+        
         ax.hist(values, bins=20, density=True, alpha=0.7, label=pos_tag)
         ax.set_title(pos_tag)
         ax.legend()
