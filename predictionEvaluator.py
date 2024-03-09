@@ -9,6 +9,7 @@ import numpy as np
 import json
 import csv
 
+folder = 'Data/'
 
 
 class RedactionEvaluator:
@@ -28,6 +29,8 @@ class RedactionEvaluator:
         self.pos_true_counts = {}
         self.pos_pred_counts = {}
         self.pos_distances = {}
+
+        self.mean_squared_distances = {}
         
         return self.correct_guess, self.pos_true_counts, self.pos_pred_counts
 
@@ -52,9 +55,10 @@ class RedactionEvaluator:
             "pos_true_counts": self.pos_true_counts,
             "pos_corr_pred_counts": self.pos_pred_counts,
         }
-        np.save("pos_distance.npy", self.pos_distances)
+        np.save(f"{folder}pos_distance.npy", self.pos_distances)
+        np.save(f"{folder}mean_squared_distances.npy", self.mean_squared_distances)
         
-        with open("prediction_res.json", 'w') as file:
+        with open(f"{folder}prediction_res.json", 'w') as file:
             json.dump(data, file, indent=4)
 
     ## Insert the part of speech tag into the dictionary/update its count
@@ -70,6 +74,12 @@ class RedactionEvaluator:
             self.pos_distances[pos].append(distance)
         else:
             self.pos_distances[pos] = [distance]
+    
+    def insert_meansqr_pos(self, mean_sqr, pos):
+        if pos in self.mean_squared_distances:
+            self.mean_squared_distances[pos].append(mean_sqr)
+        else:
+            self.mean_squared_distances[pos] = [mean_sqr]
     
     ## Plot the part of speech tag counts
     def plot_pos_counts(self):
@@ -96,11 +106,17 @@ class RedactionEvaluator:
 
         plt.tight_layout()
 
-        plt.savefig('pos_counts.png')
+        plt.savefig(f"{folder}pos_counts.png")
         #plt.show()
 
+def mean_sqr(array):
+    distances = np.array(array)
+    mean_squared = np.mean(distances ** 2)
+
+    return mean_squared
+
 def save_csv():
-    csv_file_path = "predictions.csv"
+    csv_file_path = f"{folder}predictions.csv"
 
     with open(csv_file_path, mode='w', newline='', encoding='utf-8') as file:
         writer = csv.writer(file)
@@ -147,22 +163,34 @@ for i in range(len(dataset['text'])):
             print(f'{pred["token_str"]}: word not in word2vec vocab')
             continue
         temp_preds.append(pred['token_str'])
+
+
         pred_embeding = evaluator.word2vec[pred['token_str']]
-        mean_squared_distance = np.mean((masked_embeding - pred_embeding) ** 2)
-        if(mean_squared_distance == 0):
+        distance = evaluator.word2vec.similarity(masked_word, pred['token_str'])
+
+        #mean_squared_distance = np.mean((masked_embeding - pred_embeding) ** 2)
+
+
+
+        if(distance > 0.99 or pred['token_str'] == masked_word):
             evaluator.correct_guess[str(j)] += 1
             evaluator.insert_pos(pos, evaluator.pos_pred_counts)
         j = j + 1
         masked_pos = evaluator.get_pos_tag([pred['token_str']])
         #if(masked_pos == pos):
         #    
-        evaluator.insert_pos_distance(pos, mean_squared_distance)
-        temp_scores.append(mean_squared_distance)
+        evaluator.insert_pos_distance(pos, distance)
+        temp_scores.append(distance)
+    ms = mean_sqr(temp_scores)
+    evaluator.insert_meansqr_pos(ms, pos)
+
     pred_words.append(temp_preds)
     scores.append(temp_scores)
 
 
 
+
+print(scores)
 save_csv()
 evaluator.plot_pos_counts()
 evaluator.save_dicts()
