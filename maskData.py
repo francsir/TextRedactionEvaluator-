@@ -53,47 +53,64 @@ def remove_punc(word):
     translation_table = str.maketrans("", "", string.punctuation)
     return word.translate(translation_table)
 
-def mask_random_words(dataset):
+def mask_random_words(dataset, mask_count):
     texts = []
-    label = []
+    originals = []
     for i in range(len(dataset['text'])):
 
-        tokens = chunks['text'][i].split()
-        
+        tokens = dataset['text'][i].split()
+        available_ind = list(range(len(tokens)))
 
+        original = dataset['text'][i]
         if tokens:
-            bad_word = True
-            i = 0
-            while(bad_word): 
-                idx_to_mask = random.randint(0, len(tokens)-1)
             
-                masked_word = tokens[idx_to_mask]
+            for _ in range(mask_count):
 
-                no_punc = remove_punc(masked_word)
+                if not available_ind:
+                    break
 
-                if no_punc != '':
-                    bad_word = False
-                    i += 1
-                if i > len(tokens):
-                    continue
+                bad_word = True
+                i = 0
+                while(bad_word): 
+                    idx_to_mask = random.choice(available_ind)
+                    
+
+                    masked_word = tokens[idx_to_mask]
+
+                    no_punc = remove_punc(masked_word)
+
+                    if no_punc != '':
+                        bad_word = False
+                        available_ind.remove(idx_to_mask)
+                        i += 1
+                    if i > len(tokens):
+                        continue
                 
 
-            tokens[idx_to_mask] = '[MASK]'
+                tokens[idx_to_mask] = '[MASK]'
             texts.append(" ".join(tokens))
-            label.append(no_punc)
-    
-    masked = Dataset.from_dict({'text': texts, 'label': label})
+            originals.append(original)
+                
+            
+    masked = Dataset.from_dict({'text': texts, 'original': originals})
 
     return masked
             
     
  
+def __main__(mask_count = 2, size = 3):
+    
+    ## load dataset
+    dataset = load_dataset("imdb")
+    
+    ## Split into chunks
+    chunks = group_texts(dataset['unsupervised'][:size])
 
-dataset = load_dataset("imdb")
-chunks = group_texts(dataset['unsupervised'])
-masked_data = mask_random_words(chunks)
-#print(masked_data['text'][1])
-masked_data.save_to_disk('./datasets/imdb')
+    ## Mask mask_count amount of words
+    masked_data = mask_random_words(chunks, mask_count)
 
+    ## Save
+    masked_data.save_to_disk(f"./datasets/imdb_{mask_count}_{size}")
+    print("done")
 
 
