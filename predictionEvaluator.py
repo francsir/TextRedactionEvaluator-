@@ -194,7 +194,11 @@ def __main__(ds):
                     else:
                         predictions[str(i)].append(pred['token_str'])
         except:
-            continue 
+            for pred in preds:
+                if "0" not in predictions:
+                    predictions["0"] = [pred['token_str']]
+                else:
+                    predictions["0"].append(pred['token_str'])
 
         for j in range(len(masked_word_list)):
             masked_word = masked_word_list[j]
