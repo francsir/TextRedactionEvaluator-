@@ -120,6 +120,7 @@ def mean_sqr(array):
     return mean_squared
 
 def save_csv(sentences, true_words, pred_words, scores):
+
     global dataset_path
     csv_file_path = f"{folder}/{dataset_path}/predictions.csv"
 
@@ -133,7 +134,15 @@ def save_csv(sentences, true_words, pred_words, scores):
         writer.writerow(["Sentence", "True Words", "Predicted Words", "Scores"])
 
         for sentence, true_word, pred_word, score in zip(sentences, true_words, pred_words, scores):
-            writer.writerow([sentence,', '.join(true_word), ', '.join(pred_word),', '.join(map(str, score))])
+            #print(sentence, true_word, pred_word, score)
+
+            
+
+            ##pred_values = [pred_word.get(word, '') for word in true_word]
+            ##score_values = [score.get(word, '') for word in true_word]
+##
+            ##print(pred_word, score)
+            writer.writerow([sentence, true_word, pred_word, score])
 
 def __main__(ds):
 
@@ -169,7 +178,8 @@ def __main__(ds):
         masked_word_list = [true_sentence[i] for i in masked_indices]
 
 
-        true_words.append(true_sentence)
+        #true_words.append(true_sentence)
+        true_words.append(masked_word_list)
         
 
         ## load the masked sentence and get predictions for the mask
@@ -200,9 +210,15 @@ def __main__(ds):
                 else:
                     predictions["0"].append(pred['token_str'])
 
+        temp_preds = {}
+        temp_scores = {}
         for j in range(len(masked_word_list)):
             masked_word = masked_word_list[j]
 
+
+            temp_preds[masked_word] = []
+            temp_scores[masked_word] = []
+    
             if masked_word not in evaluator.word2vec:
                 print(f'{masked_word}: Masked Word not in word2vec, skipping')
                 continue
@@ -213,15 +229,14 @@ def __main__(ds):
 
             guess_iter = 1
             
-            temp_preds = []
-            temp_scores = []
+            
 
             for pred in predictions[str(j)]:
                 if pred not in evaluator.word2vec:
                     print(f'{pred}: Pred word not in word2vec vocab')
                     continue
 
-                temp_preds.append(pred)
+                temp_preds[masked_word].append(pred)
                 distance = evaluator.word2vec.similarity(masked_word, pred)
 
                 if(distance > 0.99 or pred == masked_word):
@@ -233,9 +248,9 @@ def __main__(ds):
                 masked_pos = evaluator.get_pos_tag([pred])
 
                 evaluator.insert_pos_distance(pos, distance)
-                temp_scores.append(distance)
+                temp_scores[masked_word].append(distance)
             
-            ms = mean_sqr(temp_scores)
+            ms = mean_sqr(temp_scores[masked_word])
             evaluator.insert_meansqr_pos(ms, pos)
 
             pred_words.append(temp_preds)
