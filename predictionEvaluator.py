@@ -57,6 +57,7 @@ class RedactionEvaluator:
             "correct_guest_distribution": self.correct_guess,
             "pos_true_counts": self.pos_true_counts,
             "pos_corr_pred_counts": self.pos_pred_counts,
+            "guess_distributions": self.guess_distributions,
         }
         np.save(f"{folder}/{dataset_path}/pos_distance.npy", self.pos_distances)
         np.save(f"{folder}/{dataset_path}/mean_squared_distances.npy", self.mean_squared_distances)
@@ -137,14 +138,14 @@ class RedactionEvaluator:
             plt.suptitle(f"Guess {pos} Distribution")
             for i, dist in enumerate(dists):
                 plt.subplot(1, len(dists), i+1)
-                plt.hist(dist, density=True, bins=5, alpha=0.5, range=(-1, 1))
+                plt.hist(dist, density=True, bins=30, alpha=0.5, range=(-1, 1))
                 plt.title('Iteration'+str(i+1))
                 plt.xlabel('Cosine Similarity')
                 plt.ylabel('Frequency')
             
             plt.tight_layout()
             plt.savefig(f"{folder}/{dataset_path}/guess_distribution_{pos}.png")
-        plt.close("all")
+            plt.close("all")
 
 
 def mean_sqr(array):
