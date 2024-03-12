@@ -27,6 +27,7 @@ class RedactionEvaluator:
     ## Initialize the dictionaries
     def init_dicts(self, size):
         self.correct_guess = {str(i): 0 for i in range(1, size + 1)}
+        self.guess_distributions = {}
         self.pos_true_counts = {}
         self.pos_pred_counts = {}
         self.pos_distances = {}
@@ -112,6 +113,39 @@ class RedactionEvaluator:
         plt.savefig(f"{folder}/{dataset_path}/pos_counts.png")
         plt.close('all')
         #plt.show()
+    
+    def plot_guess_dist(self):
+        global dataset_path
+        num_guesses = len(self.guess_distributions)
+        fig, axs = plt.subplots(num_guesses, 1, figsize=(5, 2*num_guesses))
+
+        for i,(iter, dist) in enumerate(self.guess_distributions.items()):
+            axs[i].hist(dist, bins=30, alpha=0.5)
+            axs[i].set_title(f"Guess {iter}")
+            axs[i].set_xlabel('Cosine Similarity')
+            axs[i].set_ylabel('Frequency')
+
+        plt.tight_layout()
+        plt.savefig(f"{folder}/{dataset_path}/guess_distribution_distances.png")
+        plt.close("all")
+
+    def plot_temp(self):
+        global dataset_path
+
+        for pos, dists in self.guess_distributions.items():
+            plt.figure(figsize=(8,6))
+            plt.suptitle(f"Guess {pos} Distribution")
+            for i, dist in enumerate(dists):
+                plt.subplot(1, len(dists), i+1)
+                plt.hist(dist, density=True, bins=5, alpha=0.5, range=(-1, 1))
+                plt.title('Iteration'+str(i+1))
+                plt.xlabel('Cosine Similarity')
+                plt.ylabel('Frequency')
+            
+            plt.tight_layout()
+            plt.savefig(f"{folder}/{dataset_path}/guess_distribution_{pos}.png")
+        plt.close("all")
+
 
 def mean_sqr(array):
     distances = np.array(array)
@@ -220,12 +254,15 @@ def __main__(ds):
             temp_scores[masked_word] = []
     
             if masked_word not in evaluator.word2vec:
-                print(f'{masked_word}: Masked Word not in word2vec, skipping')
+                print(f'{masked_word}: Masked Word not in word2vec')
                 continue
 
             
             pos = evaluator.get_pos_tag([masked_word])
             evaluator.insert_pos(pos, evaluator.pos_true_counts)
+
+            if pos not in evaluator.guess_distributions:
+                evaluator.guess_distributions[pos] = [[] for i in range(5)]
 
             guess_iter = 1
             
@@ -237,15 +274,21 @@ def __main__(ds):
                     continue
 
                 temp_preds[masked_word].append(pred)
+
+                
                 distance = evaluator.word2vec.similarity(masked_word, pred)
 
                 if(distance > 0.99 or pred == masked_word):
                     evaluator.correct_guess[str(guess_iter)] += 1
                     evaluator.insert_pos(pos, evaluator.pos_pred_counts)
+                
+
+                evaluator.guess_distributions[pos][guess_iter - 1].append(distance)
+                
 
                 guess_iter = guess_iter + 1
 
-                masked_pos = evaluator.get_pos_tag([pred])
+                #masked_pos = evaluator.get_pos_tag([pred])
 
                 evaluator.insert_pos_distance(pos, distance)
                 temp_scores[masked_word].append(distance)
@@ -257,5 +300,7 @@ def __main__(ds):
             scores.append(temp_scores)
 
     save_csv(sentences, true_words, pred_words, scores)
+    #evaluator.plot_guess_dist()
+    evaluator.plot_temp()
     evaluator.plot_pos_counts()
     evaluator.save_dicts()
