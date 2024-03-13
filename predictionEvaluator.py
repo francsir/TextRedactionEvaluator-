@@ -57,7 +57,6 @@ class RedactionEvaluator:
             "correct_guest_distribution": self.correct_guess,
             "pos_true_counts": self.pos_true_counts,
             "pos_corr_pred_counts": self.pos_pred_counts,
-            "guess_distributions": self.guess_distributions,
         }
         np.save(f"{folder}/{dataset_path}/pos_distance.npy", self.pos_distances)
         np.save(f"{folder}/{dataset_path}/mean_squared_distances.npy", self.mean_squared_distances)
@@ -106,7 +105,7 @@ class RedactionEvaluator:
         plt.xlabel('POS Types')
         plt.ylabel('Counts')
         plt.title('True POS Type Counts vs Correct POS Predictions')
-        plt.xticks(index + bar_width / 2, pos_types)
+        plt.xticks(index + bar_width / 2, pos_types, rotation=90)
         plt.legend()
 
         plt.tight_layout()
@@ -121,7 +120,7 @@ class RedactionEvaluator:
         fig, axs = plt.subplots(num_guesses, 1, figsize=(5, 2*num_guesses))
 
         for i,(iter, dist) in enumerate(self.guess_distributions.items()):
-            axs[i].hist(dist, bins=30, alpha=0.5)
+            axs[i].hist(dist, True, bins=30, alpha=0.5)
             axs[i].set_title(f"Guess {iter}")
             axs[i].set_xlabel('Cosine Similarity')
             axs[i].set_ylabel('Frequency')
