@@ -203,6 +203,8 @@ def __main__(ds):
 
     for i in range(len(dataset['text'])):
 
+        print(f"{i}:{len(dataset['text'])}")
+
         ## Get the true value of the masked word
         true_sentence = dataset['original'][i].lower().split()
         masked_sentence = dataset['text'][i].lower().split()
