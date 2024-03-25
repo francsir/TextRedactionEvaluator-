@@ -3,7 +3,7 @@ import pandas as pd
 
 
 
-dataset = pd.read_csv('medicalData\Medical-Abstracts-TC-Corpus\medical_tc_test_masked_medical_3.csv')
+dataset = pd.read_csv('./medical_tc_test_masked_medical_3.csv')
 
 
 #tokenizer = AutoTokenizer.from_pretrained("medicalai/ClinicalBERT")
