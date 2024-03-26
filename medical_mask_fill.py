@@ -6,10 +6,10 @@ import concurrent.futures
 
 dataset = pd.read_csv('./medical_tc_test_masked_medical_3.csv')
 classifier = pipeline("fill-mask", model="medicalai/ClinicalBert")
-
+global i
+i = 0
 def process_chunk(chunk):
     count = chunk.count('[MASK]')
-    print(1)
     for i in range(count):
         temp = classifier(chunk)
         try:
@@ -22,6 +22,7 @@ def process_chunk(chunk):
 
 def predict_sentence(text):
     ##get the first prediction
+    global i 
     i = i+1
     print(i)
     if len(text) > 512:
@@ -35,7 +36,6 @@ def predict_sentence(text):
     return ' '.join(results)
 
 
-i = 0
 dataset['predicted'] = dataset['masked'].apply(predict_sentence)
 
 
