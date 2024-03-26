@@ -36,21 +36,18 @@ def predict_sentence(text):
 
 
 def substitute_masked_words(sentence):
-    #if(len(sentence) >= 512):
-    #    
-    #    print("skipped")
-    #    return predict_sentence(sentence)
+    
     words = sentence.split()
 
-    print(len(sentence))
-    print(len(words))
     global j
     j = j + 1
     print(j)
 
     mask_indices = [i for i, x in enumerate(sentence.split()) if x == "[MASK]"]
-    
-    predictions = classifier(sentence)
+    try:
+        predictions = classifier(sentence)
+    except:
+        return "NULL"
 
     mask_indices = [i for i, x in enumerate(words) if x == "[MASK]"]
     
