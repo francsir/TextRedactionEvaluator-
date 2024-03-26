@@ -20,7 +20,7 @@ def process_chunk(chunk):
 
 
 
-def predict_sentence(text, i):
+def predict_sentence(text):
     ##get the first prediction
     i = i+1
     print(i)
@@ -36,7 +36,7 @@ def predict_sentence(text, i):
 
 
 i = 0
-dataset['predicted'] = dataset['masked'].apply(predict_sentence(i))
+dataset['predicted'] = dataset['masked'].apply(predict_sentence)
 
 
 dataset.to_csv(f'medicalData\Medical-Abstracts-TC-Corpus\medical_tc_test_masked_medical_4.csv', index=False)
