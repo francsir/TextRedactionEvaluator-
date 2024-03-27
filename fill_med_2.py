@@ -42,9 +42,12 @@ def predict_sentence(text):
 
     return ' '.join(trunc_text)
 
+
+dataset = dataset[dataset['condition_label'] != 5]
 dataset = dataset[:100]
 
 dataset['predicted'] = dataset['masked'].apply(predict_sentence)
+
 
 
 dataset.to_csv(f'medicalData\Medical-Abstracts-TC-Corpus\medical_tc_test_masked_medical_5.csv', index=False)
