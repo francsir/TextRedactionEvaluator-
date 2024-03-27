@@ -17,7 +17,7 @@ model = AutoModelForMaskedLM.from_pretrained(model_checkpoint)
 tokenizer = AutoTokenizer.from_pretrained(model_checkpoint)
 #imdb_dataset = load_dataset("imdb")
 medical = Dataset.from_csv('medicalData\Medical-Abstracts-TC-Corpus\medical_tc_train.csv')
-chunk_size = 128
+chunk_size = 64
 wwm_probability = 0.2
 
 
@@ -111,7 +111,7 @@ eval_dataset = eval_dataset.rename_columns(
     }
 )
 
-batch_size = 64
+batch_size = 32
 
 
 train_dataloader = DataLoader(
