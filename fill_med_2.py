@@ -9,7 +9,10 @@ dataset = pd.read_csv('./medical_tc_test_masked_medical_3.csv')
 #tokenizer = AutoTokenizer.from_pretrained("medicalai/ClinicalBERT")
 #model = AutoModel.from_pretrained("medicalai/ClinicalBERT")
 
-classifier = pipeline("fill-mask", model="medicalai/ClinicalBert")
+output_dir = "model/clinical-trained"
+classifier = pipeline("fill-mask", model=output_dir, tokenizer=output_dir)
+
+#classifier = pipeline("fill-mask", model="medicalai/ClinicalBert")
 global t 
 t = -1
 

@@ -4,12 +4,15 @@ import pandas as pd
 
 global j
 j = -1
+
+output_dir = "model/clinical-trained"
+classifier = pipeline("fill-mask", model=output_dir, tokenizer=output_dir)
 dataset = pd.read_csv('./medical_tc_test_masked_medical_3.csv')
 
 tokenizer = AutoTokenizer.from_pretrained("medicalai/ClinicalBERT")
 #model = AutoModel.from_pretrained("medicalai/ClinicalBERT")
 
-classifier = pipeline("fill-mask", model="medicalai/ClinicalBert", tokenizer=tokenizer)
+#classifier = pipeline("fill-mask", model="medicalai/ClinicalBert", tokenizer=tokenizer)
 
 def predict_sentence(text):
     ##get the first prediction
