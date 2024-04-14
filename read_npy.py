@@ -59,3 +59,4 @@ def __main__():
             plt.close('all')
 
 
+__main__()
